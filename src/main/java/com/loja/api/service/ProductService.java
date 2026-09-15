@@ -1,5 +1,6 @@
 package com.loja.api.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -49,5 +50,11 @@ public class ProductService {
             .orElseThrow(() -> new RuntimeException("Product not found"));
         
         productRepository.delete(existingProduct);
+    }
+
+    public List<ProductDto> getProductsByIds(List<UUID> productIds) {
+        return productRepository.findAllById(productIds).stream()
+            .map(productMapper::toResponse)
+            .toList();
     }
 }
