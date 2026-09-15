@@ -1,57 +1,77 @@
 package com.loja.api.mapper;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
+import com.loja.api.dto.purchase.PurchaseItemResponse;
 import com.loja.api.dto.purchase.PurchaseRequest;
 import com.loja.api.dto.purchase.PurchaseResponse;
-import com.loja.api.dto.product.ProductDto;
-import com.loja.api.dto.user.UserResponse;
-import com.loja.api.entity.Purchase;
 import com.loja.api.entity.Product;
+import com.loja.api.entity.Purchase;
+import com.loja.api.entity.PurchaseItem;
 import com.loja.api.entity.User;
+import com.loja.api.enums.PurchaseStatus;
 
 @Component
 public class PurchaseMapper {
 
-    public Purchase toEntity(PurchaseRequest request, User user, List<Product> products) {
-        Purchase purchase = new Purchase();
-        purchase.setUser(user);
-        purchase.setProducts(products);
-        purchase.setTotal(request.total());
-        return purchase;
-    }
+	public Purchase toEntity(PurchaseRequest request, User user, List<Product> products) {
+		Map<UUID, Product> productsById = products.stream()
+			.collect(Collectors.toMap(Product::getId, Function.identity()));
 
-    public PurchaseResponse toResponse(Purchase purchase) {
-        UserResponse userResponse = null;
-        if (purchase.getUser() != null) {
-            User user = purchase.getUser();
-            userResponse = new UserResponse(
-                user.getId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail()
-            );
-        }
+		Purchase purchase = new Purchase();
+		purchase.setUser(user);
+		purchase.setStatus(PurchaseStatus.PENDING);
 
-        List<ProductDto> productDtos = null;
-        if (purchase.getProducts() != null) {
-            productDtos = purchase.getProducts().stream()
-                .map(product -> new ProductDto(
-                    product.getId(),
-                    product.getName(),
-                    product.getDescription(),
-                    product.getCents(),
-                    product.getQtyStock()
-                ))
-                .toList();
-        }
+		long totalCents = 0;
+		for (var itemRequest : request.items()) {
+			Product product = productsById.get(itemRequest.productId());
+			if (product == null) {
+				throw new IllegalArgumentException("Product not found: " + itemRequest.productId());
+			}
 
-        return new PurchaseResponse(
-            purchase.getId(),
-            userResponse,
-            productDtos,
-            purchase.getTotal()
-        );
-    }
+			long subtotalCents = Math.multiplyExact(
+				(long) product.getCents(),
+				itemRequest.quantity()
+			);
+
+			PurchaseItem item = new PurchaseItem();
+			item.setPurchase(purchase);
+			item.setProduct(product);
+			item.setQuantity(itemRequest.quantity());
+			item.setUnitPriceCents(product.getCents());
+			item.setSubtotalCents(subtotalCents);
+
+			purchase.getItems().add(item);
+			totalCents = Math.addExact(totalCents, subtotalCents);
+		}
+
+		purchase.setTotalCents(totalCents);
+		return purchase;
+	}
+
+	public PurchaseResponse toResponse(Purchase purchase) {
+		List<PurchaseItemResponse> items = purchase.getItems().stream()
+			.map(item -> new PurchaseItemResponse(
+				item.getProduct().getId(),
+				item.getProduct().getName(),
+				item.getQuantity(),
+				item.getUnitPriceCents(),
+				item.getSubtotalCents()
+			))
+			.toList();
+
+		return new PurchaseResponse(
+			purchase.getId(),
+			purchase.getUser().getId(),
+			items,
+			purchase.getTotalCents(),
+			purchase.getStatus()
+		);
+	}
 }

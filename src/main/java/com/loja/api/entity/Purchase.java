@@ -1,18 +1,22 @@
 package com.loja.api.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.loja.api.entity.Product;
-import com.loja.api.entity.User;
+import com.loja.api.enums.PurchaseStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,11 +34,16 @@ public class Purchase {
     @GeneratedValue (strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User user;
 
-    @OneToMany
-    private List<Product> products;
+    @OneToMany(mappedBy = "purchase", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PurchaseItem> items = new ArrayList<>();
 
-    private int total;
+    @NotNull
+    private long totalCents;
+
+    @Enumerated(EnumType.STRING)
+    @NotNull 
+    private PurchaseStatus status;
 }

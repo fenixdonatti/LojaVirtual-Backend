@@ -2,7 +2,6 @@ package com.loja.api.service;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.loja.api.dto.user.UserRequest;
@@ -14,11 +13,14 @@ import com.loja.api.repository.UserRepository;
 @Service 
 public class UserService {
     
-    @Autowired 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired 
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
+
+    UserService(UserRepository userRepository, UserMapper userMapper) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+    }
     
     public UserResponse getUserById(UUID id) {
         return userRepository.findById(id)
