@@ -2,7 +2,7 @@ package com.loja.api.service;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.loja.api.dto.user.UserRequest;
@@ -14,11 +14,17 @@ import com.loja.api.repository.UserRepository;
 @Service 
 public class UserService {
     
-    @Autowired 
-    private UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired 
-    private UserMapper userMapper;
+    private final UserRepository userRepository;
+
+    private final UserMapper userMapper;
+
+    UserService(UserRepository userRepository, UserMapper userMapper, BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
     
     public UserResponse getUserById(UUID id) {
         return userRepository.findById(id)
@@ -26,11 +32,11 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    public UserResponse createUser(UserRequest userRequest) {
-        User user = userMapper.toEntity(userRequest);
-        UserResponse userResponse = userMapper.toResponse(userRepository.save(user));
-        return userResponse;
-    }
+    // public UserResponse createUser(UserRequest userRequest) {
+    //     User user = userMapper.toEntity(userRequest);
+    //     UserResponse userResponse = userMapper.toResponse(userRepository.save(user));
+    //     return userResponse;
+    // }
 
     public UserResponse updateUser(UUID id, UserRequest userRequest) {
         User existingUser = userRepository.findById(id)
@@ -38,6 +44,7 @@ public class UserService {
         
         User updatedUser = userMapper.toEntity(userRequest);
         updatedUser.setId(existingUser.getId());
+        updatedUser.setPassword(passwordEncoder.encode(userRequest.password()));
         userRepository.save(updatedUser);
 
         return userMapper.toResponse(updatedUser);
