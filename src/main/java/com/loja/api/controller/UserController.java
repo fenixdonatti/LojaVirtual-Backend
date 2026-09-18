@@ -36,16 +36,6 @@ public class UserController {
         }
     }
 
-    // @PostMapping
-    // public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest userRequest) {
-    //     try {
-    //         UserResponse userResponse = userService.createUser(userRequest);
-    //         return ResponseEntity.ok(userResponse);
-    //     } catch (RuntimeException e) {
-    //         return ResponseEntity.badRequest().build();
-    //     }
-    // }
-
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @RequestBody UserRequest userRequest) {
         try {
