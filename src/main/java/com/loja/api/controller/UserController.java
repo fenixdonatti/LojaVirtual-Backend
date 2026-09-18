@@ -3,7 +3,6 @@ package com.loja.api.controller;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,13 +10,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.loja.api.dto.user.UserRequest;
 import com.loja.api.dto.user.UserResponse;
 import com.loja.api.service.UserService;
-
-@Controller 
+ 
 @RequestMapping("/user")
+@RestController 
 public class UserController {
     
     private final UserService userService;
@@ -36,15 +36,15 @@ public class UserController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest userRequest) {
-        try {
-            UserResponse userResponse = userService.createUser(userRequest);
-            return ResponseEntity.ok(userResponse);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    // @PostMapping
+    // public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest userRequest) {
+    //     try {
+    //         UserResponse userResponse = userService.createUser(userRequest);
+    //         return ResponseEntity.ok(userResponse);
+    //     } catch (RuntimeException e) {
+    //         return ResponseEntity.badRequest().build();
+    //     }
+    // }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @RequestBody UserRequest userRequest) {
